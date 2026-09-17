@@ -3,3 +3,5 @@ data/*.sqlite
 data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
+# demo DB (sanitized creds) is committed on purpose
+!data/app.demo.sqlite

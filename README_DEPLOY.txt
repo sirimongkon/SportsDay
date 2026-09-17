@@ -24,3 +24,6 @@
 6. หน้าแรก index.php รีเฟรชเองทุก 1 นาที เห็นผลสดทั้งสนาม
 
 สำรองข้อมูล: ก็อปไฟล์ data/app.sqlite เก็บไว้ไฟล์เดียวจบ
+
+ข้อมูล demo: data/app.demo.sqlite (รหัส demo: admin/Admin1234, kru1+2/Demo1234)
+  ใช้โดย: copy app.demo.sqlite เป็น app.sqlite (ห้ามทับไฟล์จริงที่มีรหัสใช้งานอยู่)
