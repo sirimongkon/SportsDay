@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "รันเว็บกีฬาสี",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:8000/index.php",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "PHP Server"
+    }
+  ]
+}

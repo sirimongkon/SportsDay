@@ -1,0 +1,5 @@
+# live SQLite data — never commit (auto-created on first hit)
+data/*.sqlite
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
