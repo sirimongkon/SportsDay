@@ -81,7 +81,7 @@ if ($act==='unlock') {
 }
 
 // --- admin only: จัดการทุกอย่าง ---
-if (!is_admin() && in_array($act,['sport_add','sport_set','sport_del','sport_set_div','team_add','team_set','team_logo','team_del','match_add','match_set','match_del','mgr_add','mgr_del','mgr_reset','token_regen','ann_add','ann_set','ann_toggle','ann_del','board_mode']))
+if (!is_admin() && in_array($act,['sport_add','sport_set','sport_del','sport_set_div','team_add','team_set','team_logo','team_del','match_add','match_set','match_del','mgr_add','mgr_set','mgr_del','mgr_reset','admin_pass','token_regen','ann_add','ann_set','ann_toggle','ann_del','board_mode']))
   fail('เฉพาะ admin');
 // โหมดตารางคะแนน: points (แต้ม) | medals (เหรียญอย่างเดียว)
 if ($act==='board_mode') {
@@ -182,12 +182,23 @@ if ($act==='match_add') {
 }
 if ($act==='match_del') { q("DELETE FROM matches WHERE id=?", [$_POST['id']]); q("DELETE FROM sets WHERE match_id=?", [$_POST['id']]); q("DELETE FROM placements WHERE match_id=?", [$_POST['id']]); ok(); }
 // แก้แมตช์: ได้แค่ ประเภท/วัน/สนาม/ลิงก์แผนที่ (ไม่แตะคู่ทีม+กีฬา กันแต้มรวมเพี้ยน)
+// ข้อยกเว้น: แมตช์เปล่ารอบชิง (ทีมว่าง) ให้ admin ใส่คู่ทีมได้ครั้งเดียวตอนรู้ผู้ชนะ
 if ($act==='match_set') {
-  if (!row("SELECT id FROM matches WHERE id=?", [$_POST['id'] ?? 0])) fail('ไม่พบแมตช์');
+  $cur = row("SELECT * FROM matches WHERE id=?", [$_POST['id'] ?? 0]);
+  if (!$cur) fail('ไม่พบแมตช์');
   $map = trim($_POST['map_url'] ?? '');
   if ($map !== '' && strpos($map, 'http://') !== 0 && strpos($map, 'https://') !== 0) fail('ลิงก์แผนที่ต้องขึ้นต้นด้วย http(s)://');
-  q("UPDATE matches SET division=?, play_at=?, venue=?, map_url=?, updated_at=? WHERE id=?",
-    [trim($_POST['division'] ?? ''), trim($_POST['play_at'] ?? ''), trim($_POST['venue'] ?? ''), $map, time(), $_POST['id']]); ok();
+  $teamSql = ''; $teamP = [];
+  if (empty($cur['team_a']) || empty($cur['team_b'])) {
+    $ta = (int)($_POST['team_a'] ?? 0); $tb = (int)($_POST['team_b'] ?? 0);
+    if ($ta && $tb) {
+      if ($ta == $tb) fail('เลือกสถาบันซ้ำกัน');
+      if (!row("SELECT id FROM teams WHERE id=?", [$ta]) || !row("SELECT id FROM teams WHERE id=?", [$tb])) fail('ไม่พบสถาบัน');
+      $teamSql = ', team_a=?, team_b=?'; $teamP = [$ta, $tb];
+    }
+  }
+  q("UPDATE matches SET division=?, play_at=?, venue=?, map_url=?, updated_at=?$teamSql WHERE id=?",
+    array_merge([trim($_POST['division'] ?? ''), trim($_POST['play_at'] ?? ''), trim($_POST['venue'] ?? ''), $map, time()], $teamP, [$_POST['id']])); ok();
 }
 if ($act==='mgr_add') {
   $u=trim($_POST['username']??''); $p=$_POST['password']??'';
@@ -200,10 +211,35 @@ if ($act==='mgr_add') {
   ok();
 }
 if ($act==='mgr_del') { q("DELETE FROM users WHERE id=? AND role='manager'", [$_POST['id']]); ok(); }
+if ($act==='mgr_set') {
+  $r = row("SELECT * FROM users WHERE id=? AND role='manager'", [$_POST['id'] ?? 0]);
+  if (!$r) fail('ไม่พบผู้จัดการ');
+  $name = trim($_POST['name'] ?? ''); if ($name==='') fail('ใส่ชื่อด้วย');
+  $u = trim($_POST['username'] ?? ''); if ($u==='') fail('ใส่ username ด้วย');
+  if ($u !== $r['username'] && row("SELECT id FROM users WHERE username=?", [$u])) fail('username นี้มีแล้ว');
+  if (!row("SELECT id FROM sports WHERE id=?", [$_POST['sport_id'] ?? 0])) fail('ไม่พบกีฬา');
+  $p = $_POST['password'] ?? '';
+  if ($p !== '') {
+    if (strlen($p)<6 || !preg_match('/[A-Za-z]/',$p) || !preg_match('/[0-9]/',$p)) fail('รหัสต้องยาว 6+ ตัว มีทั้งอักษรและตัวเลข');
+    q("UPDATE users SET name=?, username=?, pass_hash=?, sport_id=?, failed=0, locked_until=0 WHERE id=?",
+      [$name, $u, password_hash($p, PASSWORD_DEFAULT), $_POST['sport_id'], $r['id']]);
+  } else {
+    q("UPDATE users SET name=?, username=?, sport_id=? WHERE id=?", [$name, $u, $_POST['sport_id'], $r['id']]);
+  }
+  ok();
+}
 if ($act==='mgr_reset') {
   $p=$_POST['password']??'';
   if (strlen($p)<6 || !preg_match('/[A-Za-z]/',$p) || !preg_match('/[0-9]/',$p)) fail('รหัสต้องยาว 6+ ตัว มีทั้งอักษรและตัวเลข');
   q("UPDATE users SET pass_hash=?, failed=0, locked_until=0 WHERE id=? AND role='manager'", [password_hash($p, PASSWORD_DEFAULT), $_POST['id']]); ok();
 }
 if ($act==='token_regen') { $t=new_token(); q("UPDATE matches SET qr_token=? WHERE id=?", [$t, $_POST['id']]); ok(['token'=>$t]); }
+if ($act==='admin_pass') { // เปลี่ยนรหัสตัวเอง (admin เท่านั้น + ต้องใส่รหัสเดิมถูก)
+  $me = current_user();
+  $r = $me ? row("SELECT * FROM users WHERE id=?", [$me['id']]) : null;
+  if (!$r || !password_verify((string)($_POST['old'] ?? ''), $r['pass_hash'])) fail('รหัสเดิมไม่ถูกต้อง');
+  $p = $_POST['password'] ?? '';
+  if (strlen($p)<6 || !preg_match('/[A-Za-z]/',$p) || !preg_match('/[0-9]/',$p)) fail('รหัสต้องยาว 6+ ตัว มีทั้งอักษรและตัวเลข');
+  q("UPDATE users SET pass_hash=? WHERE id=?", [password_hash($p, PASSWORD_DEFAULT), $me['id']]); ok();
+}
 fail('unknown action');

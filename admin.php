@@ -34,6 +34,11 @@ if ($me) {
 <button name="login" value="1" class="w-full bg-gray-900 text-white rounded-xl py-2 font-bold">เข้า admin</button></form>
 <?php else: ?>
 <p class="text-sm mt-1">สวัสดี <?= h($me['name']) ?> • <a href="#" class="text-red-500" onclick="fetch('api.php',{method:'POST',body:new URLSearchParams({act:'logout'})}).then(()=>location.href='index.php')">ออกจากระบบ</a> • <a href="backup.php" class="text-blue-600">📥 สำรองข้อมูล DB</a></p>
+<form onsubmit="return chPass(event)" class="mt-2 flex flex-wrap items-center gap-2 text-sm bg-white rounded-xl shadow px-3 py-2">
+<span class="font-bold">🔑 เปลี่ยนรหัส admin:</span>
+<input id="pw_old" type="password" placeholder="รหัสเดิม" autocomplete="current-password" class="border rounded-lg px-2 py-1 text-sm">
+<input id="pw_new" type="password" placeholder="รหัสใหม่ 6+ ตัว อักษร+ตัวเลข" autocomplete="new-password" class="border rounded-lg px-2 py-1 text-sm">
+<button class="bg-gray-900 text-white rounded-lg px-3 py-1 text-sm">เปลี่ยนรหัส</button></form>
 <form action="restore.php" method="post" enctype="multipart/form-data" onsubmit="return confirm('คืนค่าจะทับข้อมูลปัจจุบันทั้งหมด (ระบบสำรองก้อนเดิมให้อัตโนมัติ) — ทำต่อ?')" class="mt-2 flex flex-wrap items-center gap-2 text-sm bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
 <span>♻️ คืนค่าจากไฟล์สำรอง:</span><input name="db" type="file" accept=".sqlite,.db" required class="text-xs">
 <button class="bg-amber-500 text-white rounded-lg px-3 py-1 text-xs font-bold">คืนค่า</button></form>
@@ -88,21 +93,24 @@ $title = $m['sport_type']==='rank' ? $m['sport_name'].' '.($m['division']!==''?$
 <button onclick='showQR(<?= j($url) ?>,<?= j($title) ?>)' class="bg-gray-100 text-xs rounded-lg px-2 py-1">🖨️ QR</button>
 <button onclick="regen(<?= $m['id'] ?>)" class="text-xs text-gray-500">สุ่ม QR ใหม่</button>
 <a href="score.php?match=<?= $m['id'] ?>" class="text-xs text-blue-600">เปิดกรอก</a>
-<button onclick='editMatch(<?= $m['id'] ?>,<?= $m['sport_id'] ?>,<?= j($m['division'] ?? '') ?>,<?= j($m['play_at'] ?? '') ?>,<?= j($m['venue'] ?? '') ?>,<?= j($m['map_url'] ?? '') ?>)' class="text-xs text-blue-600">แก้</button>
+<button onclick='editMatch(<?= $m['id'] ?>,<?= $m['sport_id'] ?>,<?= j($m['division'] ?? '') ?>,<?= j($m['play_at'] ?? '') ?>,<?= j($m['venue'] ?? '') ?>,<?= j($m['map_url'] ?? '') ?>,<?= (int)($m['team_a'] ?? 0) ?>,<?= (int)($m['team_b'] ?? 0) ?>)' class="text-xs text-blue-600">แก้</button>
 <button onclick="del('match_del',<?= $m['id'] ?>)" class="text-xs text-red-500">ลบ</button>
 </div><?php endforeach; ?></div></div>
 <!-- manager -->
 <div class="bg-white rounded-2xl shadow p-4">
 <h2 class="font-bold">👤 ผู้จัดการกีฬา (1 คน : 1 กีฬา)</h2>
 <form onsubmit="return addMgr(event)" class="space-y-2 mt-2 text-sm">
+<input type="hidden" id="g_id" value="">
 <input id="g_name" placeholder="ชื่อ เช่น ครูแดง" class="w-full border rounded-lg px-2 py-1">
 <input id="g_user" placeholder="username เช่น mgr-football" class="w-full border rounded-lg px-2 py-1">
-<input id="g_pass" placeholder="รหัส 6+ ตัว มีอักษร+ตัวเลข เช่น Red2026" class="w-full border rounded-lg px-2 py-1">
+<input id="g_pass" placeholder="รหัส 6+ ตัว มีอักษร+ตัวเลข (ตอนแก้: ว่างไว้ = ไม่เปลี่ยน)" class="w-full border rounded-lg px-2 py-1">
 <select id="g_sport" class="w-full border rounded-lg px-2 py-1"><?php foreach($sports as $s): ?><option value="<?= $s['id'] ?>"><?= h($s['name']) ?></option><?php endforeach; ?></select>
-<button class="w-full bg-gray-900 text-white rounded-lg py-2 font-bold">+ เพิ่ม manager</button></form>
+<div class="flex gap-2"><button id="g_btn" class="flex-1 bg-gray-900 text-white rounded-lg py-2 font-bold">+ เพิ่ม manager</button>
+<button id="g_cancel" type="button" onclick="cancelMgr()" class="hidden bg-gray-200 rounded-lg px-3 py-2">ยกเลิก</button></div></form>
 <div class="mt-3 space-y-2 text-sm"><?php foreach($mgrs as $g): ?>
 <div class="border rounded-xl px-3 py-2">🧑 <?= h($g['name']) ?> (<b><?= h($g['username']) ?></b>) → <?= h($g['sport_name']??'-') ?>
-<div class="flex gap-2 mt-1"><button onclick="resetPin(<?= $g['id'] ?>)" class="text-xs bg-gray-100 rounded-lg px-2 py-1">ตั้งรหัสใหม่</button>
+<div class="flex gap-2 mt-1"><button onclick='editMgr(<?= (int)$g['id'] ?>,<?= j($g['name']) ?>,<?= j($g['username']) ?>,<?= (int)$g['sport_id'] ?>)' class="text-xs bg-gray-100 rounded-lg px-2 py-1">แก้ชื่อ/user/รหัส</button>
+<button onclick="resetPin(<?= $g['id'] ?>)" class="text-xs bg-gray-100 rounded-lg px-2 py-1">ตั้งรหัสใหม่</button>
 <button onclick="del('mgr_del',<?= $g['id'] ?>)" class="text-xs text-red-500">ลบ</button></div></div><?php endforeach; ?></div></div>
 <!-- กีฬา/สถาบัน -->
 <div class="space-y-4">
@@ -162,10 +170,13 @@ async function post(d){ try { const r=await (await fetch('api.php',{method:'POST
  catch(e){ alert('ติดต่อ server ไม่สำเร็จ ('+e+') — ลองรีเฟรชหน้าแล้วทำใหม่'); } }
 function addMatch(e){ e.preventDefault();
  const id=document.getElementById('m_id').value;
- return post(new URLSearchParams({act:id?'match_set':'match_add',id,sport_id:m_sport.value,division:m_div.value,team_a:m_a.value,team_b:m_b.value,play_at:m_when.value,venue:m_venue.value,map_url:m_map.value})); }
-function editMatch(id,sport,div,when,venue,map){ m_id.value=id; m_sport.value=sport; syncDiv(); m_div.value=div;
+ const fd=new URLSearchParams({act:id?'match_set':'match_add',id,sport_id:m_sport.value,division:m_div.value,team_a:m_a.value,team_b:m_b.value,play_at:m_when.value,venue:m_venue.value,map_url:m_map.value});
+ return post(fd); }
+function editMatch(id,sport,div,when,venue,map,ta,tb){ m_id.value=id; m_sport.value=sport; syncDiv(); m_div.value=div;
  m_when.value=when; m_venue.value=venue; m_map.value=map;
- m_sport.disabled=m_a.disabled=m_b.disabled=true; // โหมดแก้: ล็อกคู่ทีม+กีฬา กันแต้มเพี้ยน
+ const shell=!ta||!tb; // แมตช์เปล่ารอบชิง: ให้เลือกทีมได้, แมตช์ปกติล็อกคู่ทีมเหมือนเดิม
+ m_a.value=ta||''; m_b.value=tb||''; syncTeams();
+ m_sport.disabled=!shell; m_a.disabled=m_b.disabled=!shell;
  m_btn.textContent='💾 บันทึก'; m_cancel.classList.remove('hidden'); m_when.focus(); }
 function cancelMatch(){ m_id.value=''; m_a.value=m_b.value=''; m_when.value=m_venue.value=m_map.value=''; syncDiv(); syncTeams();
  m_sport.disabled=m_a.disabled=m_b.disabled=false; m_btn.textContent='+ เพิ่ม'; m_cancel.classList.add('hidden'); }
@@ -193,7 +204,13 @@ function editTeam(id,name,short,grp,color,logo){ t_id.value=id; t_name.value=nam
  t_btn.textContent='💾 บันทึก'; t_cancel.classList.remove('hidden'); t_name.focus(); }
 function cancelTeam(){ t_id.value=''; t_name.value=t_short.value=t_grp.value=''; t_color.value='#6366f1'; t_logo.value=''; t_prev.classList.add('hidden'); t_btn.textContent='+ เพิ่ม'; t_cancel.classList.add('hidden'); }
 function logoDel(id){ if(confirm('ลบโลโก้?')) post(new URLSearchParams({act:'team_logo',id,remove:'1'})); }
-function addMgr(e){ e.preventDefault(); return post(new URLSearchParams({act:'mgr_add',name:g_name.value,username:g_user.value,password:g_pass.value,sport_id:g_sport.value})); }
+function addMgr(e){ e.preventDefault();
+ const id=document.getElementById('g_id').value;
+ if(id) return post(new URLSearchParams({act:'mgr_set',id,name:g_name.value,username:g_user.value,password:g_pass.value,sport_id:g_sport.value}));
+ return post(new URLSearchParams({act:'mgr_add',name:g_name.value,username:g_user.value,password:g_pass.value,sport_id:g_sport.value})); }
+function editMgr(id,name,username,sport){ g_id.value=id; g_name.value=name; g_user.value=username; g_sport.value=sport; g_pass.value='';
+ g_btn.textContent='💾 บันทึก'; g_cancel.classList.remove('hidden'); g_name.focus(); }
+function cancelMgr(){ g_id.value=''; g_name.value=g_user.value=g_pass.value=''; g_btn.textContent='+ เพิ่ม manager'; g_cancel.classList.add('hidden'); }
 function addAnn(e){ e.preventDefault();
  const id=document.getElementById('a_id').value;
  return post(new URLSearchParams({act:id?'ann_set':'ann_add',id,text:a_text.value})); }
@@ -205,6 +222,10 @@ function del(act,id){ if(confirm('ลบ?')) post(new URLSearchParams({act,id}))
 function unlock(id){ post(new URLSearchParams({act:'unlock',match_id:id})); }
 function regen(id){ post(new URLSearchParams({act:'token_regen',id})); }
 function resetPin(id){ const p=prompt('รหัสใหม่ (6+ ตัว มีอักษร+ตัวเลข):'); if(p) post(new URLSearchParams({act:'mgr_reset',id,password:p})); }
+function chPass(e){ e.preventDefault();
+ if(pw_new.value.length<6){ alert('รหัสใหม่ต้องยาว 6+ ตัว'); return false; }
+ if(!confirm('เปลี่ยนรหัส admin?')) return false;
+ return post(new URLSearchParams({act:'admin_pass',old:pw_old.value,password:pw_new.value})); }
 function showQR(url,title){ const b=document.getElementById('qrbox'); b.style.display='flex';
  document.getElementById('qrtitle').textContent=title; document.getElementById('qrurl').textContent=url; document.getElementById('qrurl').href=url;
  const el=document.getElementById('qr'); el.innerHTML='';

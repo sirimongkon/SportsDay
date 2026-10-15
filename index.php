@@ -55,7 +55,11 @@ function qs($o) { return http_build_query(array_merge($_GET, $o)); }
 <body class="bg-gradient-to-b from-orange-100 via-amber-50 to-rose-100 min-h-screen">
 <header class="bg-gradient-to-r from-orange-200 via-amber-100 to-rose-100 text-orange-950">
 <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between noprint">
-<a href="index.php" class="font-extrabold text-lg">🐘 คชรัตน์เกมส์</a>
+<div class="flex items-center gap-2 min-w-0">
+<a href="index.php" class="font-extrabold text-lg whitespace-nowrap">🐘 คชรัตน์เกมส์</a>
+<span class="opacity-30" aria-hidden="true">|</span>
+<a href="https://bcnsurin.ac.th/sportdaydetail/" target="_blank" rel="noopener" class="text-sm font-normal opacity-70 hover:opacity-100 hover:underline whitespace-nowrap truncate">📋 รายละเอียดของงาน</a>
+</div>
 <div class="relative">
 <button onclick="document.getElementById('navmenu').classList.toggle('hidden')" class="p-2 rounded-lg hover:bg-orange-950/10" aria-label="เมนู">☰</button>
 <div id="navmenu" class="hidden absolute right-0 mt-2 w-52 bg-white text-gray-800 rounded-2xl shadow-lg overflow-hidden text-sm z-50">

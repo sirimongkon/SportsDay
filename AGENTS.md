@@ -18,19 +18,19 @@ Vanilla PHP + SQLite, no composer/npm/build. Tailwind via CDN, QR lib vendored a
 - No `&&` — chain with `; if ($?) { ... }`. No `grep` — use the Grep tool.
 - `php -r "..."` breaks on quotes — write temp scripts to `C:\Users\Acer\AppData\Local\Temp\opencode\` and run the file instead.
 - Each bash call is a fresh shell: `Invoke-WebRequest -SessionVariable` does NOT persist across calls — do login + authed requests in ONE call.
-- PHP 8.2+: unparenthesized nested ternary (`a ? b : c ? d : e`) is fatal — use explicit `if` in templates.
+- PHP 8+: unparenthesized nested ternary (`a ? b : c ? d : e`) is fatal — use explicit `if` in templates.
 
 ## Architecture (all logic server-rendered, one JSON endpoint)
 - `lib/db.php` — PDO singleton, `migrate()` (idempotent ALTERs, runs every request — add new columns/tables here), `init_db()` seed (fresh DB only), `standings()` (sorted pts → wins → diff; rank sports map 🥇🥈🥉 into w/d/l), `tlogo()` (logo file or color dot fallback), auth helpers.
 - `api.php` — every action via `act=` POST **only** (never GET). QR-token (`score.php?t=`) writes bypass login but NEVER bypass `locked`. `finish` locks immediately; only `unlock` (admin) reopens.
 - Shared helpers in `lib/db.php`: `try_login()` (5 fails → 5-min lock, use in ALL login forms), `j()` (JS-safe json for `onclick="fn(...)"` — never `h()` there), `base_url()` (sanitized host for QR links).
-- `index.php` — public scoreboard. Entry/QR buttons render ONLY for `$me` with scope (admin: all, manager: own `sport_id`); managers are force-filtered to their sport.
+- `index.php` — public scoreboard. Entry/QR buttons render ONLY for `$me` with scope (admin: all, manager: own `sport_id`); managers are force-filtered to their sport. Nav has hardcoded external link `📋 รายละเอียดของงาน` → `https://bcnsurin.ac.th/sportdaydetail/` (`target="_blank"`, subtle style by design — don't remove or restyle prominent).
 - `score.php` — two entries: QR token (no login) or manager/admin login + `?match=` picker. Three form types: `points` (+/- steppers), `sets` (dynamic rows), `rank` (🥇🥈🥉 dropdowns, dupes rejected in API).
 - `admin.php` — admin-only CRUD + QR print modal. Edit forms reuse the add form (hidden id + `*_set` action).
 - `tv.php` — stadium display: alternates standings ⇄ live every 15s via `?v=` (+ announcements ticker, managed by `ann_*` actions). `team.php?id=` — per-team page (standings row, live/finished matches, 🥇🥈🥉 placements).
 - `backup.php` / `restore.php` — admin DB download / restore. Restore validates SQLite magic + `sports,teams,matches,users` tables before overwriting.
 - `setting('board_mode')`: `points` (default, sort pts→w→diff) | `medals` (sort 🥇→🥈→🥉). `mgr_reset` resets a manager password; `token_regen` rotates a match QR token (QR links are bearer secrets — regen, don't share the live ones).
-- Sport types: `points` | `sets` (best_of) | `rank`. Changing a sport's type or deleting it is BLOCKED while matches reference it.
+- Sport types: `points` | `sets` (best_of) | `rank`. Changing a sport's type or deleting it is BLOCKED while matches reference it. Same for `team_del` (blocked while matches/placements reference the team — delete matches first).
 - `uploads/` must be writable; logo upload enforces getimagesize + jpg/png/gif/webp + 2MB (`uploads/.htaccess` blocks script execution).
 
 ## Conventions
