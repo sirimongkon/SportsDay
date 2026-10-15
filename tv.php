@@ -23,9 +23,13 @@ $teams = []; foreach (rows("SELECT * FROM teams") as $t) $teams[$t['id']] = $t;
 <div class="bg-amber-400 text-gray-900 px-6 py-3 text-2xl font-bold overflow-hidden"><div class="ann-track"><span class="pr-8">📢 <?= $annTxt ?> &nbsp;•&nbsp;</span><span class="pr-8" aria-hidden="true">📢 <?= $annTxt ?> &nbsp;•&nbsp;</span></div></div>
 <?php endif; ?>
 <div class="max-w-6xl mx-auto px-6 py-6">
-<img src="asset/logo/logo_nobg.png" alt="คชรัตน์เกมส์ สุรินทร์ 2569" class="w-full max-h-[220px] object-cover rounded-2xl mb-4" onerror="this.style.display='none'">
 <?php if($v==='live'): ?>
-<h1 class="text-4xl font-extrabold mb-4">🔴 กำลังแข่งขัน <span class="text-lg font-normal text-gray-400">(<?= count($live) ?> คู่)</span></h1>
+<div class="text-center">
+<h1 class="text-4xl font-extrabold">🐘 คชรัตน์เกมส์</h1>
+<p class="text-xl text-gray-300 mt-1">มหกรรมกีฬาสถาบันพระบรมราชชนก ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4</p>
+<p class="text-xl text-gray-300">📍 มหาวิทยาลัยราชภัฏสุรินทร์ • เจ้าภาพ: วิทยาลัยพยาบาลบรมราชชนนี สุรินทร์</p>
+</div>
+<h2 class="text-2xl font-bold my-4 text-center">🔴 กำลังแข่งขัน <span class="text-lg font-normal text-gray-400">(<?= count($live) ?> คู่)</span></h2>
 <div class="grid md:grid-cols-2 gap-4">
 <?php foreach($live as $m):
 $ta = $teams[$m['team_a']] ?? null; $tb = $teams[$m['team_b']] ?? null; ?>
@@ -42,8 +46,11 @@ $ta = $teams[$m['team_a']] ?? null; $tb = $teams[$m['team_b']] ?? null; ?>
 <?php if(trim($m['venue'] ?? '') !== ''): ?><div class="text-xl text-gray-400 mt-2">📍 <?= h($m['venue']) ?></div><?php endif; ?>
 </div><?php endforeach; ?></div>
 <?php else: ?>
-<h1 class="text-4xl font-extrabold mb-4">🐘 คชรัตน์เกมส์ • ตารางคะแนนรวม</h1>
-<p class="text-gray-400 mb-4">มหกรรมกีฬาสถาบันพระบรมราชชนก ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4 • ม.ราชภัฏสุรินทร์</p>
+<div class="text-center">
+<h1 class="text-4xl font-extrabold">🐘 คชรัตน์เกมส์ • ตารางคะแนนรวม</h1>
+<p class="text-xl text-gray-300 mt-1">มหกรรมกีฬาสถาบันพระบรมราชชนก ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4</p>
+<p class="text-xl text-gray-300 mb-4">📍 มหาวิทยาลัยราชภัฏสุรินทร์ • เจ้าภาพ: วิทยาลัยพยาบาลบรมราชชนนี สุรินทร์</p>
+</div>
 <table class="w-full text-2xl">
 <tbody>
 <?php $i = 0; $scored = array_sum(array_column($board, 'pts')) > 0; foreach($board as $r): $i++; ?>
