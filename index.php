@@ -32,10 +32,14 @@ if ($print) $matches = rows("SELECT m.*, s.name AS sport_name, s.type AS sport_t
 $anns = rows("SELECT * FROM announcements WHERE active=1 ORDER BY id DESC");
 $grps = array_values(array_unique(array_filter(array_column($teams, 'grp')))); sort($grps);
 $typelb = ['points'=>'•แต้ม','sets'=>'•เซ็ต','rank'=>'•อันดับ'];
+// สีพาสเทลประจำกีฬา: จับคู่ id กับจานสีอ่อน (พื้นอ่อน+ตัวเข้ม) กันรบกวนสายตา
+// สีพาสเทลประจำกีฬา: กีฬาละ 1 สี ใช้เหมือนกันทั้งจุดที่ปุ่มและพื้นการ์ด
+$tints = ['#fca5a5','#fdba74','#fcd34d','#86efac','#93c5fd','#c4b5fd','#f9a8d4','#5eead4'];
+function stint($id, $tints) { return $tints[(int)$id % count($tints)]; }
 function qs($o) { return http_build_query(array_merge($_GET, $o)); }
 ?>
 <!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>🏆การแข่งขันมหกรรมกีฬาสถาบันพระบรมราชชนก🏆</title>
+<title>คชรัตน์เกมส์ • มหกรรมกีฬาสถาบันพระบรมราชชนก ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4</title>
 <link rel="icon" type="image/png" href="uploads/logo/วพบ สุรินทร์.png">
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -48,22 +52,24 @@ function qs($o) { return http_build_query(array_merge($_GET, $o)); }
 @keyframes ann-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.ann-track{animation:none}}
 @media print{ .noprint{ display:none !important; } body{ background:#fff; } section{ box-shadow:none !important; } }</style></head>
-<body class="bg-gradient-to-b from-indigo-50 via-white to-amber-50 min-h-screen">
-<header class="bg-gradient-to-r from-rose-500 via-orange-500 to-amber-500 text-white">
+<body class="bg-gradient-to-b from-orange-100 via-amber-50 to-rose-100 min-h-screen">
+<header class="bg-gradient-to-r from-orange-200 via-amber-100 to-rose-100 text-orange-950">
 <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between noprint">
-<a href="index.php" class="font-extrabold text-lg">🏆 รายงานผลการแข่งขันกีฬาสี</a>
+<a href="index.php" class="font-extrabold text-lg">🐘 คชรัตน์เกมส์</a>
 <div class="relative">
-<button onclick="document.getElementById('navmenu').classList.toggle('hidden')" class="p-2 rounded-lg hover:bg-white/20" aria-label="เมนู">☰</button>
+<button onclick="document.getElementById('navmenu').classList.toggle('hidden')" class="p-2 rounded-lg hover:bg-orange-950/10" aria-label="เมนู">☰</button>
 <div id="navmenu" class="hidden absolute right-0 mt-2 w-52 bg-white text-gray-800 rounded-2xl shadow-lg overflow-hidden text-sm z-50">
 <?php if($me): ?><div class="px-4 py-2 bg-gray-50 text-xs text-gray-500">👤 <?= h($me['name']) ?> (<?= $me['role']==='admin' ? 'admin' : 'ดูแล '.h($me['sport_name'] ?? '') ?>)</div><?php endif; ?>
 <a href="score.php" class="block px-4 py-3 hover:bg-orange-50">🖊️ กรอกสกอร์</a>
 <a href="admin.php" class="block px-4 py-3 hover:bg-orange-50 border-t">⚙️ หลังบ้าน admin</a>
 <?php if($me): ?><a href="#" onclick="fetch('api.php',{method:'POST',body:new URLSearchParams({act:'logout'})}).then(()=>location.reload())" class="block px-4 py-3 hover:bg-red-50 border-t text-red-600">🚪 ออกจากระบบ</a><?php endif; ?>
 </div></div></nav>
-<div class="max-w-6xl mx-auto px-4 pb-8">
-<h1 class="text-3xl md:text-5xl font-extrabold">🏆 การแข่งขันมหกรรมกีฬาสถาบันพระบรมราชชนก</h1>
-<p class="opacity-90 mt-1">ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4 เขตการศึกษาที่ 4 และ 5 • อัปเดตสดจากสนาม</p>
-</div></header>
+<div class="max-w-6xl mx-auto px-4">
+<div role="img" aria-label="คชรัตน์เกมส์ สุรินทร์ 2569" class="min-h-[300px] md:min-h-[460px]" style="background:url('asset/logo/logo_nobg.png') center/contain no-repeat"></div>
+<div class="pb-8 pt-2 text-center" style="text-shadow:0 1px 0 rgba(255,255,255,.8),0 2px 16px rgba(255,255,255,.7)">
+<h1 class="text-2xl md:text-4xl font-extrabold">มหกรรมกีฬาสถาบันพระบรมราชชนก ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4 “คชรัตน์เกมส์”</h1>
+<p class="opacity-90 mt-1">📍 มหาวิทยาลัยราชภัฏสุรินทร์ • เจ้าภาพ: วิทยาลัยพยาบาลบรมราชชนนี สุรินทร์ • อัปเดตสดจากสนาม</p>
+</div></div></header>
 <main class="max-w-6xl mx-auto px-4 py-6 space-y-8">
 <?php if($anns): $annTxt = implode(' &nbsp;•&nbsp; ', array_map(fn($a)=>h($a['text']), $anns)); ?>
 <div id="annbar" class="ann-wrap bg-amber-100 border border-amber-300 rounded-2xl shadow px-4 py-2 flex items-center gap-2 overflow-hidden">
@@ -101,8 +107,8 @@ else { $medal = $scored ? $i : '–'; $rowStyle=''; } ?>
 <?php else: ?>
 <div class="flex flex-wrap gap-2">
 <a href="?<?= qs(['sport'=>'all','div'=>'all']) ?>" class="px-4 py-2 rounded-full text-sm font-semibold <?= $filter==='all'?'bg-gray-900 text-white':'bg-white shadow' ?>">ทั้งหมด</a>
-<?php foreach($sports as $s): ?>
-<a href="?<?= qs(['sport'=>$s['id'],'div'=>'all']) ?>" class="px-4 py-2 rounded-full text-sm font-semibold <?= (string)$filter===(string)$s['id']?'bg-gray-900 text-white':'bg-white shadow' ?>"><?= h($s['name']) ?> <span class="opacity-60"><?= $typelb[$s['type']]??'' ?></span></a>
+<?php foreach($sports as $s): $on = (string)$filter===(string)$s['id']; ?>
+<a href="?<?= qs(['sport'=>$s['id'],'div'=>'all']) ?>" <?= $on ? 'style="border-color:'.stint($s['id'],$tints).'"' : '' ?> class="px-4 py-2 rounded-full text-sm font-semibold text-black bg-white shadow border-2 <?= $on?'':'border-transparent' ?>"><span style="color:<?= stint($s['id'],$tints) ?>">●</span> <?= h($s['name']) ?> <span class="opacity-60"><?= $typelb[$s['type']]??'' ?></span></a>
 <?php endforeach; ?></div>
 <?php endif; ?>
 <div class="flex flex-wrap gap-2 items-center">
@@ -139,7 +145,7 @@ foreach ($matches as $m) {
 // คู่รอแข่งเรียงวัน/เวลาใกล้→ไกล (ไม่ใส่วันไว้ท้าย)
 usort($mgroups['next'], fn($a,$b)=> [(($a['play_at']??'')==='')?1:0, $a['play_at']??'', $a['id']] <=> [(($b['play_at']??'')==='')?1:0, $b['play_at']??'', $b['id']]);
 $mlb = ['live' => '🔴 กำลังแข่งขัน', 'next' => '⏳ ยังไม่ถึงเวลา', 'done' => '✅ แข่งขันจบแล้ว'];
-$mtint = ['live' => 'bg-red-50 border-red-400', 'next' => 'bg-white border-transparent', 'done' => 'bg-gray-50 border-gray-200'];
+$mtint = ['live' => 'border-red-400', 'next' => 'border-transparent', 'done' => 'border-gray-200'];
 foreach ($mgroups as $gk => $gm):
 if (!$gm) continue;
 if (!$print): ?><h2 class="text-lg font-bold"><?= $mlb[$gk] ?> <span class="text-sm font-normal text-gray-400">(<?= count($gm) ?> คู่)</span></h2><?php endif; ?>
@@ -152,8 +158,8 @@ $divBadge = div_badge($m['division']);
 $can = $me && ($me['role']==='admin' || (int)($me['sport_id'] ?? 0)===(int)$m['sport_id']);
 $qr = $can ? base_url().'/score.php?t='.$m['qr_token'] : '';
 ?>
-<div class="rounded-2xl shadow p-4 border-2 <?= $mtint[$gk] ?>">
-<div class="flex items-center gap-2 mb-2 flex-wrap"><span class="font-bold text-indigo-600"><?= h($m['sport_name']) ?></span><?= $divBadge ?><?= $badge ?></div>
+<div class="rounded-2xl shadow p-4 border-2 <?= $mtint[$gk] ?>" style="background:color-mix(in srgb, <?= stint($m['sport_id'],$tints) ?> 20%, white)">
+<div class="flex items-center gap-2 mb-2 flex-wrap"><span class="font-bold text-black rounded-full px-2 py-0.5" style="background:#fffdf8"><?= h($m['sport_name']) ?></span><?= $divBadge ?><?= $badge ?></div>
 <?php $mapbtn = map_link($m); $wv = h(th_when($m)).(trim($m['venue']??'')!=='' ? ' 📍 '.h($m['venue']) : ''); if(trim($wv)!=='' || $mapbtn!==''): ?><p class="text-xs text-gray-500 mb-2 flex items-center gap-2 flex-wrap"><?php if(trim($wv)!==''): ?><span>📅 <?= $wv ?></span><?php endif; ?><?= $mapbtn ?></p><?php endif; ?>
 <?php if($m['sport_type']==='rank'):
 $pl = match_places($m['id']); $pmedal=[1=>'🥇',2=>'🥈',3=>'🥉']; ?>
@@ -165,18 +171,18 @@ if(!$pl) echo '<p class="text-sm text-gray-400">ยังไม่มีผล�
 $setRows = $m['sport_type']==='sets' ? match_sets($m['id']) : []; ?>
 <div class="flex items-center justify-between gap-2 text-center">
 <div class="flex-1"><?= tlogo($ta ?? ['color'=>'#999'],40) ?><div class="font-semibold mt-1 text-sm" title="<?= h($ta['name']??'?') ?>"><?= h($ta?tname($ta):'?') ?></div></div>
-<div class="text-4xl font-extrabold tabular-nums"><?= $m['score_a'] ?><span class="text-gray-300 mx-1">:</span><?= $m['score_b'] ?></div>
+<div class="text-4xl font-extrabold tabular-nums text-black bg-white/70 rounded-xl px-3 py-1"><?= $m['score_a'] ?><span class="text-gray-500 mx-1">:</span><?= $m['score_b'] ?></div>
 <div class="flex-1"><?= tlogo($tb ?? ['color'=>'#999'],40) ?><div class="font-semibold mt-1 text-sm" title="<?= h($tb['name']??'?') ?>"><?= h($tb?tname($tb):'?') ?></div></div>
 </div>
 <?php if($setRows): ?>
 <div class="overflow-x-auto mt-2"><table class="w-full text-sm tabular-nums">
-<thead><tr class="text-gray-400 text-xs"><th class="text-left font-normal py-1">ทีม \ เซ็ต</th><?php foreach($setRows as $s): ?><th class="font-normal px-2"><?= $s['set_no'] ?></th><?php endforeach; ?><th class="font-bold text-gray-600 px-2">เซ็ต</th></tr></thead>
+<thead><tr class="text-gray-600 text-xs"><th class="text-left font-semibold py-1">ทีม \ เซ็ต</th><?php foreach($setRows as $s): ?><th class="font-semibold px-2"><?= $s['set_no'] ?></th><?php endforeach; ?><th class="font-bold text-gray-600 px-2">เซ็ต</th></tr></thead>
 <tbody>
 <?php foreach([['t'=>$ta,'k'=>'a'],['t'=>$tb,'k'=>'b']] as $rr): ?>
 <tr class="border-t">
 <td class="py-1 pr-1 font-semibold truncate max-w-[110px]" title="<?= h($rr['t']['name']??'?') ?>"><?= h($rr['t']?tname($rr['t']):'?') ?></td>
 <?php foreach($setRows as $s): $w=set_winner($s['a'],$s['b']); $win=($w==='A'&&$rr['k']==='a')||($w==='B'&&$rr['k']==='b'); ?>
-<td class="text-center px-2 py-1 <?= $win?'font-extrabold bg-green-100 rounded':'text-gray-400' ?>"><?= $rr['k']==='a' ? $s['a'] : $s['b'] ?></td>
+<td class="text-center px-2 py-1 <?= $win?'font-extrabold text-black bg-green-100 rounded':'text-gray-600 font-semibold' ?>"><?= $rr['k']==='a' ? $s['a'] : $s['b'] ?></td>
 <?php endforeach; ?>
 <td class="text-center px-2 font-extrabold"><?= $rr['k']==='a' ? $m['score_a'] : $m['score_b'] ?></td>
 </tr>

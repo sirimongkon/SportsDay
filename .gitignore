@@ -3,5 +3,7 @@ data/*.sqlite
 data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
+# restore.php auto-backups (contain live data too)
+data/*.bak
 # demo DB (sanitized creds) is committed on purpose
 !data/app.demo.sqlite

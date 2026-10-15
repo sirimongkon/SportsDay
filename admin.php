@@ -17,7 +17,7 @@ if ($me) {
 }
 ?>
 <!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>หลังบ้าน admin</title><link rel="icon" type="image/png" href="uploads/logo/วพบ สุรินทร์.png"><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<title>หลังบ้าน admin • คชรัตน์เกมส์</title><link rel="icon" type="image/png" href="uploads/logo/วพบ สุรินทร์.png"><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:'Prompt',sans-serif}</style></head>
 <body class="bg-gray-50 min-h-screen"><div class="max-w-6xl mx-auto px-4 py-6">
 <div class="flex gap-2 text-sm">

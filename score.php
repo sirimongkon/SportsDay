@@ -29,7 +29,7 @@ if ($match) {
 }
 ?>
 <!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>กรอกสกอร์</title><link rel="icon" type="image/png" href="uploads/logo/วพบ สุรินทร์.png"><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<title>กรอกสกอร์ • คชรัตน์เกมส์</title><link rel="icon" type="image/png" href="uploads/logo/วพบ สุรินทร์.png"><script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet"><style>body{font-family:'Prompt',sans-serif}input[type=number]{-moz-appearance:textfield}</style></head>
 <body class="bg-gradient-to-b from-emerald-50 to-white min-h-screen">
 <div class="max-w-xl mx-auto px-4 py-6">

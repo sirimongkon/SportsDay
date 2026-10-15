@@ -10,7 +10,7 @@ $anns = rows("SELECT * FROM announcements WHERE active=1 ORDER BY id DESC");
 $teams = []; foreach (rows("SELECT * FROM teams") as $t) $teams[$t['id']] = $t;
 ?>
 <!DOCTYPE html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📺 จอสนาม</title>
+<title>📺 คชรัตน์เกมส์ • จอสนาม</title>
 <link rel="icon" type="image/png" href="uploads/logo/วพบ สุรินทร์.png">
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -23,6 +23,7 @@ $teams = []; foreach (rows("SELECT * FROM teams") as $t) $teams[$t['id']] = $t;
 <div class="bg-amber-400 text-gray-900 px-6 py-3 text-2xl font-bold overflow-hidden"><div class="ann-track"><span class="pr-8">📢 <?= $annTxt ?> &nbsp;•&nbsp;</span><span class="pr-8" aria-hidden="true">📢 <?= $annTxt ?> &nbsp;•&nbsp;</span></div></div>
 <?php endif; ?>
 <div class="max-w-6xl mx-auto px-6 py-6">
+<img src="asset/logo/logo_nobg.png" alt="คชรัตน์เกมส์ สุรินทร์ 2569" class="w-full max-h-[220px] object-cover rounded-2xl mb-4" onerror="this.style.display='none'">
 <?php if($v==='live'): ?>
 <h1 class="text-4xl font-extrabold mb-4">🔴 กำลังแข่งขัน <span class="text-lg font-normal text-gray-400">(<?= count($live) ?> คู่)</span></h1>
 <div class="grid md:grid-cols-2 gap-4">
@@ -41,7 +42,8 @@ $ta = $teams[$m['team_a']] ?? null; $tb = $teams[$m['team_b']] ?? null; ?>
 <?php if(trim($m['venue'] ?? '') !== ''): ?><div class="text-xl text-gray-400 mt-2">📍 <?= h($m['venue']) ?></div><?php endif; ?>
 </div><?php endforeach; ?></div>
 <?php else: ?>
-<h1 class="text-4xl font-extrabold mb-4">📊 ตารางคะแนนรวม</h1>
+<h1 class="text-4xl font-extrabold mb-4">🐘 คชรัตน์เกมส์ • ตารางคะแนนรวม</h1>
+<p class="text-gray-400 mb-4">มหกรรมกีฬาสถาบันพระบรมราชชนก ภาคตะวันออกเฉียงเหนือ ครั้งที่ 4 • ม.ราชภัฏสุรินทร์</p>
 <table class="w-full text-2xl">
 <tbody>
 <?php $i = 0; $scored = array_sum(array_column($board, 'pts')) > 0; foreach($board as $r): $i++; ?>

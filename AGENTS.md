@@ -6,10 +6,13 @@ Vanilla PHP + SQLite, no composer/npm/build. Tailwind via CDN, QR lib vendored a
 - Dev server (local PHP has pdo_sqlite DLL but NOT enabled — flags are required):
   `php -d extension=pdo_sqlite -d extension=sqlite3 -S 127.0.0.1:8000 -t .`
 - Or press F5 in VSCode (`.vscode/` runs the same command + opens Chrome).
-- Default admin: `admin / Admin1234`. DB auto-creates at `data/app.sqlite` on first hit.
+- Default admin: `admin / Admin1234` (fresh DB only — the live DB uses real passwords, see below). DB auto-creates at `data/app.sqlite` on first hit.
 
-## NEVER delete `data/app.sqlite`
-It holds live user data (past mistake wiped it). For tests: back up, test, then clean up test rows **via API** (`match_del`, `mgr_del`) — never `Remove-Item` the DB.
+## DB + git (live credentials!)
+- `data/app.sqlite` holds REAL logins — never delete it, never `git add -f` it, never print hashes. Ignored via `data/*.sqlite`.
+- `data/app.demo.sqlite` is the committed sanitized copy (`admin/Admin1234`, `kru1`+`kru2`/`Demo1234`, QR tokens rotated). Rebuild = copy live DB → reset users + `failed`/`locked_until` → rotate every `qr_token`. Deploy demo via `copy app.demo.sqlite app.sqlite` — never overwrite the live file.
+- For tests: back up, test, then clean up test rows **via API** (`match_del` cascades sets+placements, `mgr_del`) — never `Remove-Item` the DB.
+- `restore.php` auto-backs-up the current DB to `data/app-*.sqlite.bak` before overwriting (also gitignored via `data/*.bak`).
 
 ## Shell quirks (Windows PowerShell 5.1)
 - No `&&` — chain with `; if ($?) { ... }`. No `grep` — use the Grep tool.
@@ -24,6 +27,9 @@ It holds live user data (past mistake wiped it). For tests: back up, test, then 
 - `index.php` — public scoreboard. Entry/QR buttons render ONLY for `$me` with scope (admin: all, manager: own `sport_id`); managers are force-filtered to their sport.
 - `score.php` — two entries: QR token (no login) or manager/admin login + `?match=` picker. Three form types: `points` (+/- steppers), `sets` (dynamic rows), `rank` (🥇🥈🥉 dropdowns, dupes rejected in API).
 - `admin.php` — admin-only CRUD + QR print modal. Edit forms reuse the add form (hidden id + `*_set` action).
+- `tv.php` — stadium display: alternates standings ⇄ live every 15s via `?v=` (+ announcements ticker, managed by `ann_*` actions). `team.php?id=` — per-team page (standings row, live/finished matches, 🥇🥈🥉 placements).
+- `backup.php` / `restore.php` — admin DB download / restore. Restore validates SQLite magic + `sports,teams,matches,users` tables before overwriting.
+- `setting('board_mode')`: `points` (default, sort pts→w→diff) | `medals` (sort 🥇→🥈→🥉). `mgr_reset` resets a manager password; `token_regen` rotates a match QR token (QR links are bearer secrets — regen, don't share the live ones).
 - Sport types: `points` | `sets` (best_of) | `rank`. Changing a sport's type or deleting it is BLOCKED while matches reference it.
 - `uploads/` must be writable; logo upload enforces getimagesize + jpg/png/gif/webp + 2MB (`uploads/.htaccess` blocks script execution).
 
